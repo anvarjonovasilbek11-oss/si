@@ -82,29 +82,48 @@ export default async function handler(req, res) {
     let matchedCount = 0;
 
     if (userPromptLower && cropsData.length > 0) {
-        // Look for exact variety name match or stem category match
+        // STEP 1: Priority 1 - Search for SPECIFIC variety/hybrid name matches (to avoid loading all category items)
+        const matchedVarieties = [];
         for (const crop of cropsData) {
             const cropNameLower = crop.name.toLowerCase();
-            const cropCategoryLower = crop.category.toLowerCase();
-            
-            // Check direct match, mapped synonyms, or category mentions
-            let isMatch = userPromptLower.includes(cropNameLower) || userPromptLower.includes(cropCategoryLower);
-            
-            if (!isMatch) {
-                // Check if any synonym matches
-                for (const [key, value] of Object.entries(searchSynonyms)) {
-                    if (userPromptLower.includes(key) && cropCategoryLower === value) {
-                        isMatch = true;
-                        break;
-                    }
-                }
+            // Match specific variety name if it's found in prompt (e.g. "ajax", "saebong", "cometa")
+            // Crop name should be longer than 2 characters to prevent false matching on tiny particles
+            if (cropNameLower.length > 2 && userPromptLower.includes(cropNameLower)) {
+                matchedVarieties.push(crop);
             }
+        }
 
-            if (isMatch) {
+        if (matchedVarieties.length > 0) {
+            // If specific variety matches are found, ONLY use those! (Never exceed token limits!)
+            for (const crop of matchedVarieties) {
                 matchedContext += `### Nav/Gibrid nomi: ${crop.name}\n**Toifa**: ${crop.category}\n**Fayl**: ${crop.filename}\n**Tavsifi & Xususiyatlari**:\n${crop.content}\n\n`;
                 matchedCount++;
-                // Limit matched records to 4 to protect context window limits
-                if (matchedCount >= 4) break;
+                if (matchedCount >= 2) break; // Maximum 2 specific varieties to preserve tokens
+            }
+        } else {
+            // STEP 2: Priority 2 - If no specific variety matched, check for general category match
+            let matchedCategoryName = "";
+            for (const [key, value] of Object.entries(searchSynonyms)) {
+                if (userPromptLower.includes(key)) {
+                    matchedCategoryName = value;
+                    break;
+                }
+            }
+            
+            if (matchedCategoryName) {
+                // Find all crops belonging to this category
+                const categoryCrops = cropsData.filter(c => c.category.toLowerCase() === matchedCategoryName.toLowerCase());
+                if (categoryCrops.length > 0) {
+                    // Summarize categories (e.g. list names) instead of dumping full text of 13+ files!
+                    const varietyNames = categoryCrops.map(c => c.name).join(", ");
+                    matchedContext += `### Tizim Ma'lumotlar Bazasi - [${matchedCategoryName.toUpperCase()}] Toifasi\n`;
+                    matchedContext += `Ushbu toifada jami ${categoryCrops.length} ta nav aniqlandi: ${varietyNames}.\n\n`;
+                    matchedContext += `Foydalanuvchiga ushbu mavjud navlar ro'yxatini ko'rsating va qaysi biri haqida batafsil ma'lumot (jadval) olishni istashini so'rang.\n\n`;
+                    
+                    // Include full details of ONLY the first 1 variety as a sample to keep tokens under 2,000!
+                    const sampleCrop = categoryCrops[0];
+                    matchedContext += `### Namunaviy Nav: ${sampleCrop.name}\n${sampleCrop.content}\n\n`;
+                }
             }
         }
     }
