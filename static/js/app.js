@@ -10,6 +10,7 @@ const tempValue = document.getElementById('tempValue');
 const tokenRange = document.getElementById('tokenRange');
 const tokenValue = document.getElementById('tokenValue');
 const btnClearChat = document.getElementById('btnClearChat');
+const emptyState = document.getElementById('emptyState');
 
 // Chat State
 let chatHistory = [];
@@ -55,16 +56,41 @@ chatInput.addEventListener('input', (e) => {
     e.target.style.height = (e.target.scrollHeight) + 'px';
 });
 
-// Clear chat
+// Show/Hide Empty State Grid
+function updateEmptyState() {
+    if (chatHistory.length === 0) {
+        emptyState.style.display = 'flex';
+    } else {
+        emptyState.style.display = 'none';
+    }
+}
+
+// Clear chat (Safely preserving empty state block)
 btnClearChat.addEventListener('click', () => {
     chatHistory = [];
-    messagesContainer.innerHTML = '';
-    showWelcomeMessage();
+    const rows = messagesContainer.querySelectorAll('.message-row');
+    rows.forEach(row => row.remove());
+    updateEmptyState();
     alert("Chat muvaffaqiyatli tozalandi!");
 });
 
+// Handle click on Suggestion Card
+window.selectSuggestion = function(text) {
+    chatInput.value = text;
+    // Dispatch input event to enable button
+    chatInput.dispatchEvent(new Event('input'));
+    // Automatically submit message
+    sendMessage();
+};
+
 // Render Message Helper
 function appendMessage(role, text) {
+    // Hide suggestions grid immediately when a message is added
+    chatHistory.push({ role: role, content: text }); // update chat length
+    updateEmptyState();
+    // Remove from array since sendMessage handles adding it to state history
+    chatHistory.pop(); 
+
     const row = document.createElement('div');
     row.className = `message-row ${role}`;
     
@@ -73,7 +99,12 @@ function appendMessage(role, text) {
     
     const header = document.createElement('div');
     header.className = 'msg-header';
-    header.innerHTML = role === 'user' ? '👤 Siz' : '🤖 Asilbek AI';
+    
+    if (role === 'user') {
+        header.innerHTML = '<span class="msg-header-icon">👤</span> Siz';
+    } else {
+        header.innerHTML = '<span class="msg-header-icon">🤖</span> Asilbek AI';
+    }
     
     const body = document.createElement('div');
     body.className = 'msg-text';
@@ -101,7 +132,7 @@ function showLoader() {
     
     const header = document.createElement('div');
     header.className = 'msg-header';
-    header.innerHTML = '🤖 Asilbek AI';
+    header.innerHTML = '<span class="msg-header-icon">🤖</span> Asilbek AI';
     
     const body = document.createElement('div');
     body.className = 'msg-text';
@@ -125,11 +156,6 @@ function removeLoader() {
     if (loader) loader.remove();
 }
 
-// Welcome Message
-function showWelcomeMessage() {
-    appendMessage('assistant', "Salom! Mening ismim **Asilbek**. Men sizning o'zbek tilidagi aqlli sun'iy intellekt yordamchingizman. Bugun sizga qanday yordam bera olaman? 😊");
-}
-
 // Send message to Serverless API
 async function sendMessage() {
     const text = chatInput.value.trim();
@@ -138,7 +164,7 @@ async function sendMessage() {
     // Display user message and clear inputs
     appendMessage('user', text);
     chatInput.value = '';
-    chatInput.style.height = '38px';
+    chatInput.style.height = '34px';
     btnSend.disabled = true;
 
     // Save to state history
@@ -199,5 +225,5 @@ chatInput.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize App
-showWelcomeMessage();
+// Initialize App (Suggestions are shown by default since chatHistory is empty)
+updateEmptyState();

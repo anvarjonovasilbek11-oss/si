@@ -85,13 +85,48 @@
 
             <!-- Messages Viewport -->
             <div class="messages-container" id="messagesContainer">
+                
+                <!-- EMPTY STATE (Gemini Style Welcome + Suggestion Cards) -->
+                <div class="empty-state-container" id="emptyState">
+                    <div class="welcome-section">
+                        <div class="ai-avatar-glowing">🤖</div>
+                        <h1 class="welcome-heading">Salom! Men Asilbek AI</h1>
+                        <p class="welcome-subheading">Bugun sizga qanday yordam bera olaman? Men o'zbek tilida gapiradigan aqlli sun'iy intellekt yordamchisiman. Quyidagi tayyor mavzulardan birini tanlashingiz mumkin:</p>
+                    </div>
+                    
+                    <div class="suggestions-grid">
+                        <div class="suggestion-card" onclick="selectSuggestion('Menga o\'zbek tilida insho yozish rejasini tuzib ber 📝')">
+                            <div class="suggestion-text">Insho rejasi tuzish 📝</div>
+                            <div class="suggestion-sub">Mavzu bo'yicha chiroyli va tartibli o'zbekcha reja tayyorlash</div>
+                            <div class="suggestion-icon">➔</div>
+                        </div>
+                        <div class="suggestion-card" onclick="selectSuggestion('Python-da sodda Telegram bot yozish kodini ko\'rsat va tushuntir 💻')">
+                            <div class="suggestion-text">Telegram bot yaratish 💻</div>
+                            <div class="suggestion-sub">Python-da sodda va tushunarli bot yozish kodini tahlil qilish</div>
+                            <div class="suggestion-icon">➔</div>
+                        </div>
+                        <div class="suggestion-card" onclick="selectSuggestion('Fizika fanidan Nyuton qonunlarini sodda qilib tushuntirib ber ⚛️')">
+                            <div class="suggestion-text">Nyuton qonunlari ⚛️</div>
+                            <div class="suggestion-sub">Fizika fani qonunlarini hayotiy misollar bilan oson o'rganish</div>
+                            <div class="suggestion-icon">➔</div>
+                        </div>
+                        <div class="suggestion-card" onclick="selectSuggestion('Menga ish so\'rash uchun xat (motivation letter) yozishda yordam ber ✉️')">
+                            <div class="suggestion-text">Motivatsion xat yozish ✉️</div>
+                            <div class="suggestion-sub">Professional va rasmiy motivatsion xat namunasini yozish</div>
+                            <div class="suggestion-icon">➔</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Messages will be injected here dynamically -->
             </div>
 
             <!-- Input Area -->
-            <div class="input-container">
-                <textarea class="chat-input" id="chatInput" placeholder="Asilbek AI ga savol bering..." rows="1"></textarea>
-                <button class="btn-send" id="btnSend" disabled>➔</button>
+            <div class="input-container-wrapper">
+                <div class="input-container">
+                    <textarea class="chat-input" id="chatInput" placeholder="Asilbek AI ga savol bering..." rows="1"></textarea>
+                    <button class="btn-send" id="btnSend" disabled>➔</button>
+                </div>
             </div>
         </main>
     </div>
