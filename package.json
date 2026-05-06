@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "officeparser": "^6.1.1"
+  }
+}
