@@ -173,10 +173,12 @@ async function sendMessage() {
     // Display typing animation
     showLoader();
 
-    // Prepare API body
+    // Prepare API body - oxirgi 6 xabar bilan cheklash (token limitga tushmaslik uchun)
+    const MAX_HISTORY = 6;
+    const trimmedHistory = chatHistory.slice(-MAX_HISTORY);
     const payloadMessages = [
         { role: "system", content: SYSTEM_PROMPT },
-        ...chatHistory
+        ...trimmedHistory
     ];
 
     try {
@@ -190,7 +192,7 @@ async function sendMessage() {
                 messages: payloadMessages,
                 model: modelSelect.value,
                 temperature: parseFloat(tempRange.value),
-                max_tokens: parseInt(tokenRange.value)
+                max_tokens: Math.min(parseInt(tokenRange.value), 1024) // max 1024 token (limit: 6000 TPM)
             })
         });
 

@@ -164,7 +164,7 @@ export default async function handler(req, res) {
                 model: model || 'llama-3.1-8b-instant',
                 messages: messages,
                 temperature: temperature !== undefined ? temperature : 0.7,
-                max_tokens: max_tokens || 2048
+                max_tokens: Math.min(max_tokens || 1024, 1024) // 6000 TPM limitga tushmaslik uchun max 1024
             })
         });
         
