@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HR Assistant</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 HR Assistant</h1>
+            <p class="subtitle" id="subtitle">Ask me anything about HR!</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <!-- Welcome message -->
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p id="welcomeMessage">Hello! I'm your HR assistant. How can I help you today?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <textarea 
+                id="messageInput" 
+                placeholder="Type your question..."
+                rows="1"
+            ></textarea>
+            <button id="sendButton" class="send-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

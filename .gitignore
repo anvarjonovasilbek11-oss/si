@@ -1,0 +1,22 @@
+# Sensitive data
+.env
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js dependencies
+node_modules/
+
+# Local configuration and logs
+.vscode/
+.idea/
+*.log

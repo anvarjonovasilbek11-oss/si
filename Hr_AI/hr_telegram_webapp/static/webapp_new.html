@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HR Assistant</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+        }
+
+        /* Header */
+        .header {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        /* Language Selector */
+        .language-selector {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 12px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        /* Chat Container */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Messages */
+        .message {
+            display: flex;
+            margin-bottom: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .user-message .message-content {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .bot-message .message-content {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000000);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Input Container */
+        .input-container {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            flex-shrink: 0;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 20px;
+            font-size: 15px;
+            resize: none;
+            max-height: 100px;
+            font-family: inherit;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        #messageInput::placeholder {
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, opacity 0.2s;
+            font-size: 20px;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Scrollbar */
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--tg-theme-hint-color, #cccccc);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Language Selector -->
+        <div class="header">
+            <h1>🤖 HR Assistant</h1>
+            <div class="language-selector">
+                <button class="lang-btn" data-lang="uz">🇺🇿 UZ</button>
+                <button class="lang-btn" data-lang="ru">🇷🇺 RU</button>
+                <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <!-- Messages will be added here dynamically -->
+        </div>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <textarea 
+                id="messageInput" 
+                placeholder="Type your question..."
+                rows="1"
+            ></textarea>
+            <button id="sendButton" class="send-button">
+                ➤
+            </button>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        // MODULE 5: WebApp Frontend Implementation
+        
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Get user info from Telegram
+        const user = tg.initDataUnsafe?.user || { id: 123456789 };
+        const userId = user.id;
+        const userLang = user.language_code || 'en';
+
+        // DOM elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const loading = document.getElementById('loading');
+        const langButtons = document.querySelectorAll('.lang-btn');
+
+        // Current selected language
+        let selectedLang = 'en';
+
+        // Set initial language based on user's Telegram language
+        if (['uz', 'ru', 'en'].includes(userLang)) {
+            selectedLang = userLang;
+            langButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === selectedLang);
+            });
+        }
+
+        // Language selector
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedLang = btn.dataset.lang;
+                langButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update placeholder
+                const placeholders = {
+                    uz: "Savolingizni yozing...",
+                    ru: "Введите ваш вопрос...",
+                    en: "Type your question..."
+                };
+                messageInput.placeholder = placeholders[selectedLang];
+                
+                // Haptic feedback
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Add message to chat
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Show/hide loading
+        function setLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            sendButton.disabled = show;
+            messageInput.disabled = show;
+        }
+
+        // Send message to API
+        async function sendMessage(message) {
+            try {
+                setLoading(true);
+                
+                // Call POST /api/chat endpoint
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telegram_id: userId,
+                        question: message,
+                        language: selectedLang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                // Display bot response instantly
+                addMessage(data.answer, false);
+                
+                // Haptic feedback
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                const errorMessages = {
+                    uz: "Kechirasiz, xatolik yuz berdi. Qaytadan urinib ko'ring.",
+                    ru: "Извините, произошла ошибка. Попробуйте еще раз.",
+                    en: "Sorry, an error occurred. Please try again."
+                };
+                
+                addMessage(errorMessages[selectedLang], false);
+                
+                // Haptic feedback for error
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Handle send button click
+        sendButton.addEventListener('click', async () => {
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Send to API
+            await sendMessage(message);
+        });
+
+        // Handle Enter key (without Shift)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendButton.click();
+            }
+        });
+
+        // Set Telegram theme colors
+        document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+        document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+        document.body.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#3390ec');
+        document.body.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+        document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f0f0f0');
+
+        // Show welcome message
+        const welcomeMessages = {
+            uz: "Salom! Men HR yordamchisiman. Savolingizni bering!",
+            ru: "Здравствуйте! Я HR-ассистент. Задайте ваш вопрос!",
+            en: "Hello! I'm your HR assistant. Ask me anything!"
+        };
+        addMessage(welcomeMessages[selectedLang], false);
+
+        // Focus input
+        messageInput.focus();
+    </script>
+</body>
+</html>

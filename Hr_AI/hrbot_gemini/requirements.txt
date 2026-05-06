@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+google-generativeai
+psycopg2-binary
+sqlalchemy
+python-dotenv
+qdrant-client
+pgvector
+langdetect
